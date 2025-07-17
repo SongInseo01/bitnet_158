@@ -3,7 +3,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from BitLinear import BitLinear
 from zeta.nn.modules.simple_rmsnorm import SimpleRMSNorm
 
 batch_size = 16
@@ -21,9 +20,9 @@ dropout = 0.1
 class Head(nn.Module):
     def __init__(self, head_size):
         super().__init__()
-        self.key = BitLinear(n_embed, head_size, bias=False)
-        self.query = BitLinear(n_embed, head_size, bias=False)
-        self.value = BitLinear(n_embed, head_size, bias=False)
+        self.key = nn.Linear(n_embed, head_size, bias=False)
+        self.query = nn.Linear(n_embed, head_size, bias=False)
+        self.value = nn.Linear(n_embed, head_size, bias=False)
         self.register_buffer("tril", torch.tril(torch.ones(block_size, block_size)))
 
     def forward(self, inputs):
@@ -51,9 +50,9 @@ class FeedForward(nn.Module):
     def __init__(self, n_embed):
         super().__init__()
         self.layer = nn.Sequential(
-            BitLinear(n_embed, 4 * n_embed),
+            nn.Linear(n_embed, 4 * n_embed),
             nn.SiLU(),
-            BitLinear(4 * n_embed, n_embed),
+            nn.Linear(4 * n_embed, n_embed),
             nn.Dropout(dropout)
         )
 
@@ -76,14 +75,14 @@ class Block(nn.Module):
         return input_tensor
 
 
-class BitnetTransformer(nn.Module):
+class Transformer(nn.Module):
     def __init__(self, vocab_length):
         super().__init__()
         self.embedding_token_table = nn.Embedding(vocab_length, n_embed)
         self.position_embedding_table = nn.Embedding(block_size, n_embed)
         self.blocks = nn.Sequential(*[Block(n_embed, 4) for _ in range(n_layer)])
         self.ln_f = SimpleRMSNorm(n_embed)
-        self.lm_head = BitLinear(n_embed, vocab_length)
+        self.lm_head = nn.Linear(n_embed, vocab_length)
 
     def forward(self, inputs, targets=None):
         batch, sequence = inputs.shape

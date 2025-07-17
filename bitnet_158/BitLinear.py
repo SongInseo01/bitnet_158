@@ -32,7 +32,7 @@ class BitLinear(nn.Module):
     """
     def __init__(self, in_features: int, out_features: int, bias=False):
         super().__init__()
-        self.weight = nn.Parameter(torch.rand(out_features, in_features) * 0.02)
+        self.weight = nn.Parameter(torch.rand(out_features, in_features).uniform_(-0.02, 0.02))
         self.bias = nn.Parameter(torch.zeros(out_features)) if bias else None
         self.in_features = in_features
         self.out_features = out_features
@@ -46,14 +46,15 @@ class BitLinear(nn.Module):
         x_quant = x_norm + (activation_quant(x_norm) - x_norm).detach()
 
         # 3. 가중치 양자화 (STE)
-        # w_q = weight_quant(self.weight) # 함수 사용 Ver
+        # 함수 사용 Ver
+        w_q = weight_quant(self.weight)
 
         # 디버깅용, 함수 사용 X Ver
-        gamma = self.weight.abs().mean()
-        w_q = torch.round(self.weight / (gamma + 1e-5)).clamp_(-1, 1)
-        if self.training:
-            print(f"[BitLinear] γ: {gamma.item():.4f}")
-            print(f"[BitLinear] w_q unique: {w_q.unique(sorted=True)}")  # [-1, 0, 1] 인지 확인
+        # gamma = self.weight.abs().mean()
+        # w_q = torch.round(self.weight / (gamma + 1e-5)).clamp_(-1, 1)
+        # if self.training:
+        #     print(f"[BitLinear] γ: {gamma.item():.4f}")
+        #     print(f"[BitLinear] w_q unique: {w_q.unique(sorted=True)}")  # [-1, 0, 1] 인지 확인
 
 
         w_quant = self.weight + (w_q - self.weight).detach()

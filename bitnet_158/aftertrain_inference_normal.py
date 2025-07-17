@@ -1,5 +1,6 @@
 import torch
 from Bitnet_Transformer import BitnetTransformer
+from normal_Transformer import Transformer
 from transformers import AutoTokenizer
 import torch.nn.functional as F
 
@@ -18,8 +19,8 @@ tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 tokenizer.pad_token = tokenizer.eos_token  # 필요 시 eos_token으로 설정
 
 # 모델 생성 후 파라미터 로드
-model = BitnetTransformer(vocab_length=tokenizer.vocab_size).to(device)
-model.load_state_dict(torch.load("/home/ccl/Desktop/isfolder/BitNet/bitnet_158/bitnet_158/bitnet_transformer_optimized.pth", map_location=device))
+model = Transformer(vocab_length=tokenizer.vocab_size).to(device)
+model.load_state_dict(torch.load("/home/ccl/Desktop/isfolder/BitNet/bitnet_158/bitnet_158/normal_transformer_optimized.pth", map_location=device))
 model.eval()
 
 # 추론 함수

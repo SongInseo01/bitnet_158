@@ -5,10 +5,10 @@ from transformers import AutoTokenizer
 from torch.utils.data import DataLoader
 
 # 학습 값
-batch_size = 32
-block_size = 256
-max_iteration = 50000
-eval_interval = 300
+batch_size = 4
+block_size = 4096
+max_iteration = 10000
+eval_interval = 1
 learning_rate = 1e-3
 device = "cuda" if torch.cuda.is_available() else "cpu"
 eval_iteration = 200
@@ -23,7 +23,8 @@ train_data = dataset["train"]
 
 # 토크나이저
 tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")  # 또는 직접 학습한 tokenizer
-tokenizer.pad_token = tokenizer.eos_token  # BitNetGPT에 맞게 설정 (eos 사용)
+if tokenizer.pad_token is None:
+    tokenizer.add_special_tokens({'pad_token': '[PAD]'})
 
 # 전처리
 def preprocess(example):
