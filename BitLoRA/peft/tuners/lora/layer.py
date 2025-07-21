@@ -31,6 +31,8 @@ from peft.utils.other import transpose
 from .config import LoraConfig
 from .dora import DoraConv2dLayer, DoraConv3dLayer, DoraEmbeddingLayer, DoraLinearLayer, _DoraConvNdLayer
 
+from bitnet import BitLinear
+
 
 class LoraLayer(BaseTunerLayer):
     # All names of layers that may contain (trainable) adapter weights
@@ -404,6 +406,61 @@ class LoraLayer(BaseTunerLayer):
 
         return result
 
+
+class BitLoRALayer(nn.Module, LoraLayer):
+    def __init__(
+            self,
+            base_layer: BitLinear,
+            adapter_name: str,
+            r: int = 0,
+            lora_alpha: int = 1,
+            lora_dropout: float = 0.0,
+            lora_bias: bool = False,
+            **kwargs
+    ):
+        super().__init__()
+        LoraLayer.init__(self, base_layer, **kwargs)
+
+        # BitLinear는 in_features, out_features 속성을 직접 가지므로 그대로 사용 가능하다.
+        self.update_layer(
+            adapter_name,
+            r=r,
+            lora_alpha=lora_alpha,
+            lora_dropout=lora_dropout,
+            init_lora_weights=True,
+            use_rslora=False,
+            lora_bias=lora_bias,
+        )
+
+    def update_layer(
+            self,
+            adapter_name,
+            r,
+            lora_alpha,
+            lora_dropout,
+            init_lora_weights,
+            use_rslora,
+            lora_bias,
+    ):
+        # lora_A, lora_B를 BitLinear로 구성
+        self.r[adapter_name] = r
+        self.lora_alpha[adapter_name] = lora_alpha
+        self.scaling[adapter_name] = lora_alpha / r
+
+        self.lora_dropout.update(
+            nn.ModuleDict({adapter_name: nn.Dropout(lora_dropout) if lora_dropout > 0 else nn.Identity()})
+        )
+
+        self.lora_A[adapter_name] = BitLinear(self.in_features, r, bias=False)
+        self.lora_B[adapter_name] = BitLinear(r, self.out_features, bias=lora_bias)
+        self.lora_bias[adapter_name] = lora_bias
+        
+        if init_lora_weights:
+            self.reset_lora_parameters(adapter_name, init_lora_weights)
+        
+        self._move_adapter_to_device_of_base_layer(adapter_name)
+
+        self.set_adapter(self.active_adapters)
 
 # Below code is based on https://github.com/microsoft/LoRA/blob/main/loralib/layers.py
 # and modified to work with PyTorch FSDP

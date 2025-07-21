@@ -55,6 +55,8 @@ from .layer import Conv2d, LoraLayer, dispatch_default
 from .torchao import dispatch_torchao
 from .tp_layer import dispatch_megatron
 
+from layer import BitLoRALayer
+
 
 def _adapter_names_pre_forward_hook(target, args, kwargs, adapter_names):
     # pre-forward hook to inject the adapter_names argument when using mixed adapter batches inference
@@ -937,3 +939,48 @@ class LoraModel(BaseTuner):
                 )
 
         return tensors_lora
+
+class BitLoraModel(BaseTuner):
+    prefix: str = "bitlora_"
+
+    def __init__(self, model, config, adapter_name, low_cpu_mem_usage=False):
+        super().__init__(model, config, adapter_name, low_cpu_mem_usage=low_cpu_mem_usage)
+
+    def _check_new_adapter_config(self, config):
+        if (len(self.peft_config) > 1) and (config.bias != "none"):
+            raise ValueError("BitLoRAModel은 bias가 여러 adapter에서 지원되지 않습니다.")
+        
+    def _create_and_replace(self, lora_config, adapter_name, target, target_name, parent, current_key):
+        from bitnet import BitLinear
+
+        r_key = get_pattern_key(lora_config.rank_pattern.keys(), current_key)
+        alpha_key = get_pattern_key(lora_config.alpha_pattern.keys(), current_key)
+        r = lora_config.rank_pattern.get(r_key, lora_config.r)
+        alpha = lora_config.alpha_pattern.get(alpha_key, lora_config.lora_alpha)
+
+        kwargs = {
+            "r": r,
+            "lora_alpha": alpha,
+            "lora_dropout": lora_config.lora_dropout,
+            "fan_in_fan_out": lora_config.fan_in_fan_out,
+            "init_lora_weights": lora_config.init_lora_weights,
+            "lora_bias": lora_config.lora_bias,
+        }
+
+        if isinstance(target, BitLoRALayer):
+            # 기존 BitLoRALayer이면 업데이트
+            target.update_layer(adapter_name, r, lora_alpha=alpha)
+        elif isinstance(target, BitLinear):
+            new_module = BitLoRALayer(target, adapter_name, **kwargs)
+            if adapter_name not in self.active_adapters:
+                new_module.requires_grad_(False)
+            self._replace_module(parent, target_name, new_module, target)
+        else:
+            raise TypeError(f"지원하지 않는 계층입니다: {type(target)}")
+
+    def _replace_module(self, parent, child_name, new_module, child):
+        setattr(parent, child_name, new_module)
+
+    def _mark_only_adapters_as_trainable(self, model: nn.Module) -> None:
+        for name, param in model.named_parameters():
+            param.requires_grad = self.prefix in name or "lora_" in name

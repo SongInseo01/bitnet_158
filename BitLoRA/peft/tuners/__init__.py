@@ -20,7 +20,9 @@
 from .adaption_prompt import AdaptionPromptConfig, AdaptionPromptModel
 from .lora import (
     LoraConfig,
+    BitLoraConfig,
     LoraModel,
+    BitLoraModel,
     LoftQConfig,
     EvaConfig,
     LoraRuntimeConfig,

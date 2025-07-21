@@ -3,7 +3,7 @@ from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
 from trl import SFTTrainer
 from onebitllms import replace_linear_with_bitnet_linear
-from BitLoRA.peft import LoraConfig, get_peft_model
+from BitLoRA.peft import BitLoraConfig, get_peft_model
 
 # 1. 모델 및 토크나이저 로드
 model_id = "tiiuae/Falcon-E-3B-Instruct"
@@ -21,7 +21,7 @@ model = AutoModelForCausalLM.from_pretrained(
 model = replace_linear_with_bitnet_linear(model)
 
 # 3. BitLoRA 구성
-lora_config = LoraConfig(
+lora_config = BitLoraConfig(
     r=4,
     lora_alpha=16,
     lora_dropout=0.05,
