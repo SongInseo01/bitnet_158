@@ -55,7 +55,7 @@ from .layer import Conv2d, LoraLayer, dispatch_default
 from .torchao import dispatch_torchao
 from .tp_layer import dispatch_megatron
 
-from layer import BitLoRALayer
+from .layer import BitLoRALayer
 
 
 def _adapter_names_pre_forward_hook(target, args, kwargs, adapter_names):
@@ -951,7 +951,7 @@ class BitLoraModel(BaseTuner):
             raise ValueError("BitLoRAModel은 bias가 여러 adapter에서 지원되지 않습니다.")
         
     def _create_and_replace(self, lora_config, adapter_name, target, target_name, parent, current_key):
-        from bitnet import BitLinear
+        from .bitnet import BitLinear
 
         r_key = get_pattern_key(lora_config.rank_pattern.keys(), current_key)
         alpha_key = get_pattern_key(lora_config.alpha_pattern.keys(), current_key)

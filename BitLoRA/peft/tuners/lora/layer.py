@@ -31,7 +31,7 @@ from peft.utils.other import transpose
 from .config import LoraConfig
 from .dora import DoraConv2dLayer, DoraConv3dLayer, DoraEmbeddingLayer, DoraLinearLayer, _DoraConvNdLayer
 
-from bitnet import BitLinear
+from .bitnet import BitLinear
 
 
 class LoraLayer(BaseTunerLayer):
