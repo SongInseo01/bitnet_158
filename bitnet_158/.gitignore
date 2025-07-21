@@ -1,5 +1,8 @@
+<<<<<<< HEAD
+=======
 *.pth
 
+>>>>>>> 092445f4a1fc35613ab8a0466d03ec9533585902
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
