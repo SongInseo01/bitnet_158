@@ -77,12 +77,10 @@ dataset = load_dataset("Abirate/english_quotes")
 dataset = dataset["train"].train_test_split(test_size=0.1)
 
 # 5. 전처리 함수 정의
-def preprocess_function(example):
-    return tokenizer(example["quote"], truncation=True, padding="max_length", max_length=128)
+def preprocess(example):
+    return {"text": example["quote"]}
 
-tokenized_dataset = dataset.map(preprocess_function, batched=True)
-tokenized_dataset = tokenized_dataset.remove_columns(["quote"])  # ✅ 문자열 필드 제거
-tokenized_dataset.set_format("torch")
+tokenized_dataset = dataset.map(preprocess)
 
 # 6. 학습 인자 설정
 training_args = TrainingArguments(
@@ -112,7 +110,8 @@ trainer = SFTTrainer(
     train_dataset=tokenized_dataset["train"],
     eval_dataset=tokenized_dataset["test"],
     max_seq_length=128,
-    packing=True  # 문장 여러 개 합치지 않고 단일 문장 학습
+    packing=True,
+    dataset_text_field="text",
 )
 
 # 8. 학습 수행
