@@ -26,15 +26,15 @@ import torch
 from torch import nn
 from tqdm import tqdm
 
-from peft.import_utils import is_bnb_4bit_available, is_bnb_available
-from peft.tuners.tuners_utils import (
+from ....peft.import_utils import is_bnb_4bit_available, is_bnb_available
+from ....peft.tuners.tuners_utils import (
     BaseTuner,
     BaseTunerLayer,
     check_target_module_exists,
     onload_layer,
     replicate_layers,
 )
-from peft.utils import (
+from ....peft.utils import (
     TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING,
     ModulesToSaveWrapper,
     _freeze_adapter,
@@ -42,8 +42,8 @@ from peft.utils import (
     get_peft_model_state_dict,
     get_quantization_config,
 )
-from peft.utils.merge_utils import dare_linear, dare_ties, magnitude_prune, task_arithmetic, ties
-from peft.utils.other import get_pattern_key
+from ....peft.utils.merge_utils import dare_linear, dare_ties, magnitude_prune, task_arithmetic, ties
+from ....peft.utils.other import get_pattern_key
 
 from .aqlm import dispatch_aqlm
 from .awq import dispatch_awq
