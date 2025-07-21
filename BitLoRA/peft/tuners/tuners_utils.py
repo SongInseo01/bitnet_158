@@ -859,6 +859,16 @@ class BaseTunerLayer(ABC):
                 adapter_layer[adapter_name] = adapter_layer[adapter_name].to(device)
 
 
+    def _register_custom_module(self, mapping: dict[type[nn.Module], type[nn.Module]]) -> None:
+        """
+        Custom module을 PEFT에 등록하는 메서드.
+        예: {BitNetLinear: BitLoRALayer}
+        """
+        if not hasattr(self, "_custom_module_classes"):
+            self._custom_module_classes = {}
+        self._custom_module_classes.update(mapping)
+
+
 def _find_minimal_target_modules(
     target_modules: list[str] | set[str], other_module_names: list[str] | set[str]
 ) -> set[str]:
