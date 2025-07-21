@@ -21,7 +21,7 @@ model = AutoModelForCausalLM.from_pretrained(
 model = replace_linear_with_bitnet_linear(model)
 
 # 3. BitLoRA 구성
-lora_config = BitLoraConfig(
+bitlora_config = BitLoraConfig(
     r=4,
     lora_alpha=16,
     lora_dropout=0.05,
@@ -30,7 +30,7 @@ lora_config = BitLoraConfig(
     use_dora=False
 )
 
-model = get_peft_model(model, lora_config)
+model = get_peft_model(model, bitlora_config)
 
 # 4. 예시 데이터셋 불러오기
 dataset = load_dataset("Abirate/english_quotes")
