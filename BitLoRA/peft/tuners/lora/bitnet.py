@@ -20,6 +20,7 @@ class BitLinear(nn.Module):
         
     def forward(self, x: Tensor):
         w = self.weight
+        print(f"[BitLinear] w.requires_grad: {w.requires_grad}, x.requires_grad: {x.requires_grad}")
 
         with torch.cuda.device(w.device):
             x_quant = x + (activation_quant_triton(x) - x).detach()
