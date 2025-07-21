@@ -950,6 +950,32 @@ class BitLoraModel(BaseTuner):
         if (len(self.peft_config) > 1) and (config.bias != "none"):
             raise ValueError("BitLoRAModel은 bias가 여러 adapter에서 지원되지 않습니다.")
         
+    @staticmethod
+    def _check_target_module_exists(lora_config, key):
+        return check_target_module_exists(lora_config, key)
+    
+    @staticmethod
+    def _prepare_adapter_config(peft_config, model_config):
+        if peft_config.target_modules is None:
+            if model_config["model_type"] not in TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING:
+                raise ValueError("peft_config에 target_modules를 명시해야 합니다.")
+            peft_config.target_modules = set(
+                TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING[model_config["model_type"]]
+            )
+        return peft_config
+    
+    def enable_adapter_layers(self) -> None:
+        """LoRA adapter layer를 활성화합니다."""
+        for module in self.model.modules():
+            if isinstance(module, BitLoRALayer):
+                module.enable_adapters(True)
+    
+    def disable_adapter_layers(self):
+        """LoRA apapter layer를 비활성화합니다."""
+        for module in self.model.modules():
+            if isinstance(module, BitLoRALayer):
+                module.enable_adapters(False)
+        
     def _create_and_replace(self, lora_config, adapter_name, target, target_name, parent, current_key):
         from .bitnet import BitLinear
 
@@ -983,4 +1009,7 @@ class BitLoraModel(BaseTuner):
 
     def _mark_only_adapters_as_trainable(self, model: nn.Module) -> None:
         for name, param in model.named_parameters():
-            param.requires_grad = self.prefix in name or "lora_" in name
+            if self.prefix in name:
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
