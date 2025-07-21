@@ -56,6 +56,7 @@ from .torchao import dispatch_torchao
 from .tp_layer import dispatch_megatron
 
 from .layer import BitLoRALayer
+from .bitnet import BitLinear
 
 
 def _adapter_names_pre_forward_hook(target, args, kwargs, adapter_names):
@@ -940,11 +941,16 @@ class LoraModel(BaseTuner):
 
         return tensors_lora
 
+
+
 class BitLoraModel(BaseTuner):
     prefix: str = "bitlora_"
 
     def __init__(self, model, config, adapter_name, low_cpu_mem_usage=False):
         super().__init__(model, config, adapter_name, low_cpu_mem_usage=low_cpu_mem_usage)
+
+        # BitLinear 계층을 BitLoRALayer로 자동 교체
+        self._register_custom_module({BitLinear: BitLoRALayer})
 
     def _check_new_adapter_config(self, config):
         if (len(self.peft_config) > 1) and (config.bias != "none"):
