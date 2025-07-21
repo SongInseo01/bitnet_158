@@ -419,7 +419,7 @@ class BitLoRALayer(nn.Module, LoraLayer):
             **kwargs
     ):
         super().__init__()
-        LoraLayer.init__(self, base_layer, **kwargs)
+        LoraLayer.__init__(self, base_layer, **kwargs)
 
         # BitLinear는 in_features, out_features 속성을 직접 가지므로 그대로 사용 가능하다.
         self.update_layer(
