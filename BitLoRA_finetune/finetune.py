@@ -2,7 +2,6 @@ import torch
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
 from trl import SFTTrainer
-from onebitllms import replace_linear_with_bitnet_linear
 from BitLoRA.peft import BitLoraConfig, get_peft_model
 
 # 1. 모델 및 토크나이저 로드
@@ -16,9 +15,6 @@ model = AutoModelForCausalLM.from_pretrained(
     torch_dtype=torch.bfloat16,
     revision="prequantized"
 )
-
-# 2. BitLinear로 Linear 대체
-# model = replace_linear_with_bitnet_linear(model)
 
 # 3. BitLoRA 구성
 bitlora_config = BitLoraConfig(
