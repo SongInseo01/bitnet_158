@@ -112,7 +112,7 @@ trainer = SFTTrainer(
     train_dataset=tokenized_dataset["train"],
     eval_dataset=tokenized_dataset["test"],
     max_seq_length=128,
-    packing=False  # 문장 여러 개 합치지 않고 단일 문장 학습
+    packing=True  # 문장 여러 개 합치지 않고 단일 문장 학습
 )
 
 # 8. 학습 수행
