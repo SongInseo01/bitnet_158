@@ -20,7 +20,7 @@ model = AutoModelForCausalLM.from_pretrained(
 from typing import Optional
 import torch
 import torch.nn as nn
-from bitnet import BitLinear
+from .bitnet import BitLinear
 
 def replace_linear_with_bitnet_linear(model, previous_dtype: Optional[torch.dtype] = None):
     """
