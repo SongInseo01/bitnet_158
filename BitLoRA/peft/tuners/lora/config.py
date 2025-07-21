@@ -512,7 +512,7 @@ class LoraConfig(PeftConfig):
 
 
 @dataclass
-class BitLoraConfig(PeftConfig):
+class BitLoraConfig(LoraConfig):
     """
     This is the configuration class to store the configuration of a [`BitLoraModel`].
 
