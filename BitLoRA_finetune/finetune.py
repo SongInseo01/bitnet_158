@@ -81,6 +81,8 @@ def preprocess_function(example):
     return tokenizer(example["quote"], truncation=True, padding="max_length", max_length=128)
 
 tokenized_dataset = dataset.map(preprocess_function, batched=True)
+tokenized_dataset = tokenized_dataset.remove_columns(["quote"])  # ✅ 문자열 필드 제거
+tokenized_dataset.set_format("torch")
 
 # 6. 학습 인자 설정
 training_args = TrainingArguments(
@@ -110,7 +112,6 @@ trainer = SFTTrainer(
     train_dataset=tokenized_dataset["train"],
     eval_dataset=tokenized_dataset["test"],
     max_seq_length=128,
-    dataset_text_field="quote",
     packing=False  # 문장 여러 개 합치지 않고 단일 문장 학습
 )
 
