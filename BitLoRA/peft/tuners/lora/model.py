@@ -943,7 +943,7 @@ class LoraModel(BaseTuner):
 
 
 
-class BitLoraModel(BaseTuner):
+class BitLoraModel(LoraModel):
     prefix: str = "bitlora_"
 
     def __init__(self, model, config, adapter_name, low_cpu_mem_usage=False):
