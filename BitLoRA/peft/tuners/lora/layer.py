@@ -433,7 +433,7 @@ class BitLoRALayer(nn.Module, LoraLayer):
         )
 
     def update_layer(
-            self,
+        self,
             adapter_name,
             r,
             lora_alpha,
@@ -442,7 +442,6 @@ class BitLoRALayer(nn.Module, LoraLayer):
             use_rslora,
             lora_bias,
     ):
-        # lora_A, lora_B를 BitLinear로 구성
         self.r[adapter_name] = r
         self.lora_alpha[adapter_name] = lora_alpha
         self.scaling[adapter_name] = lora_alpha / r
@@ -451,16 +450,27 @@ class BitLoRALayer(nn.Module, LoraLayer):
             nn.ModuleDict({adapter_name: nn.Dropout(lora_dropout) if lora_dropout > 0 else nn.Identity()})
         )
 
-        self.lora_A[adapter_name] = BitLinear(self.in_features, r, bias=False)
-        self.lora_B[adapter_name] = BitLinear(r, self.out_features, bias=lora_bias)
+        # ✅ BitLinear 계층 생성
+        lora_A = BitLinear(self.in_features, r, bias=False)
+        lora_B = BitLinear(r, self.out_features, bias=lora_bias)
+
+        # ✅ 학습 가능하도록 설정
+        lora_A.weight.requires_grad = True
+        lora_B.weight.requires_grad = True
+        if lora_B.bias is not None:
+            lora_B.bias.requires_grad = True
+
+        self.lora_A[adapter_name] = lora_A
+        self.lora_B[adapter_name] = lora_B
         self.lora_bias[adapter_name] = lora_bias
-        
+
         if init_lora_weights:
             self.reset_lora_parameters(adapter_name, init_lora_weights)
-        
+
         self._move_adapter_to_device_of_base_layer(adapter_name)
 
         self.set_adapter(self.active_adapters)
+
 
     def forward(self, x: torch.Tensor, *args: Any, **kwargs: Any) -> torch.Tensor:
         self._check_forward_args(x, *args, **kwargs)

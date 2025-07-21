@@ -1,8 +1,15 @@
+# python -m BitLoRA_finetune.finetune
+
 import torch
+from torch import nn
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments
 from trl import SFTTrainer
 from BitLoRA.peft import BitLoraConfig, get_peft_model
+from typing import Optional
+import torch
+import torch.nn as nn
+from BitLoRA.peft.tuners.lora.bitnet import BitLinear
 
 # 1. 모델 및 토크나이저 로드
 model_id = "tiiuae/Falcon-E-3B-Instruct"
@@ -16,11 +23,13 @@ model = AutoModelForCausalLM.from_pretrained(
     revision="prequantized"
 )
 
+print("\n🔍 [초기 모델 구조: nn.Linear만 있는 상태]")
+for name, module in model.named_modules():
+    if isinstance(module, nn.Linear):
+        print(f"[Linear] {name} ({module.in_features} → {module.out_features})")
 
-from typing import Optional
-import torch
-import torch.nn as nn
-from .bitnet import BitLinear
+
+
 
 def replace_linear_with_bitnet_linear(model, previous_dtype: Optional[torch.dtype] = None):
     """
@@ -60,6 +69,12 @@ def replace_linear_with_bitnet_linear(model, previous_dtype: Optional[torch.dtyp
 # 2. BitLinear로 Linear 대체
 model = replace_linear_with_bitnet_linear(model)
 
+# ✅ 여기에 삽입 (BitLinear로 잘 교체됐는지 확인)
+print("\n🔍 [BitLinear 변환 후 구조 확인]")
+for name, module in model.named_modules():
+    if isinstance(module, BitLinear):
+        print(f"[BitLinear] {name}")
+
 # 3. BitLoRA 구성
 bitlora_config = BitLoraConfig(
     r=4,
@@ -71,6 +86,13 @@ bitlora_config = BitLoraConfig(
 )
 
 model = get_peft_model(model, bitlora_config)
+
+print("\n🔍 [LoRA 실제 삽입 계층 확인]")
+for name, module in model.named_modules():
+    if hasattr(module, "lora_A"):
+        print(f"[LoRA Layer] {name}")
+        for adapter in module.lora_A:
+            print(f"  - adapter: {adapter}, A.shape: {module.lora_A[adapter].weight.shape}")
 
 # 4. 예시 데이터셋 불러오기
 dataset = load_dataset("Abirate/english_quotes")
@@ -113,6 +135,16 @@ trainer = SFTTrainer(
     packing=True,
     dataset_text_field="text",
 )
+
+# ✅ 여기에 4단계 체크 코드 삽입 (trainer.train() 바로 전!)
+print("\n🔍 [학습 가능한 파라미터 목록]")
+trainable_params = []
+for name, param in model.named_parameters():
+    if param.requires_grad:
+        trainable_params.append(name)
+print(f"총 학습 가능한 파라미터 수: {len(trainable_params)}")
+for name in trainable_params:
+    print(f" - {name}")
 
 # 8. 학습 수행
 trainer.train()
