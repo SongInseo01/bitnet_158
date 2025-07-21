@@ -18,7 +18,7 @@ model = AutoModelForCausalLM.from_pretrained(
 )
 
 # 2. BitLinear로 Linear 대체
-model = replace_linear_with_bitnet_linear(model)
+# model = replace_linear_with_bitnet_linear(model)
 
 # 3. BitLoRA 구성
 bitlora_config = BitLoraConfig(
