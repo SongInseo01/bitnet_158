@@ -289,6 +289,7 @@ TRANSFORMERS_MODELS_TO_VBLORA_TARGET_MODULES_MAPPING = {
 PEFT_TYPE_TO_PREFIX_MAPPING = {
     PeftType.IA3: "ia3_",
     PeftType.LORA: "lora_",
+    PeftType.BITLORA: "bitlora_",
     PeftType.ADALORA: "lora_",
     PeftType.LOHA: "hada_",
     PeftType.LOKR: "lokr_",
