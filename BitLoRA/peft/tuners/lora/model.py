@@ -949,9 +949,6 @@ class BitLoraModel(LoraModel):
     def __init__(self, model, config, adapter_name, low_cpu_mem_usage=False):
         super().__init__(model, config, adapter_name, low_cpu_mem_usage=low_cpu_mem_usage)
 
-        # BitLinear 계층을 BitLoRALayer로 자동 교체
-        self._register_custom_module({BitLinear: BitLoRALayer})
-
     def _check_new_adapter_config(self, config):
         if (len(self.peft_config) > 1) and (config.bias != "none"):
             raise ValueError("BitLoRAModel은 bias가 여러 adapter에서 지원되지 않습니다.")
