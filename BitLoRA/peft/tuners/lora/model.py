@@ -1002,7 +1002,7 @@ class BitLoraModel(BaseTuner):
         if isinstance(target, BitLoRALayer):
             # 기존 BitLoRALayer이면 업데이트
             target.update_layer(adapter_name, r, lora_alpha=alpha)
-        elif isinstance(target, BitLinear):
+        elif type(target).__name__ == "BitLinear":
             new_module = BitLoRALayer(target, adapter_name, **kwargs)
             if adapter_name not in self.active_adapters:
                 new_module.requires_grad_(False)
